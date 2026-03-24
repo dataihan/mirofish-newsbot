@@ -23,7 +23,7 @@ jobs:
         run: python news_bot.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nasdaq-news-${{ github.run_number }}
           path: output/*.txt
