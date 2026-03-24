@@ -2,7 +2,7 @@ name: MiroFish News Bot
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # Mỗi 6 tiếng: 0h, 6h, 12h, 18h UTC
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
@@ -22,7 +22,28 @@ jobs:
       - name: Run news bot
         run: python news_bot.py
 
-      - name: Upload artifact
+      - name: Auto feed to MiroFish
+        env:
+          MIROFISH_URL: ${{ secrets.MIROFISH_URL }}
+        run: |
+          python - <<'EOF'
+          import requests, os, glob
+          files = glob.glob('output/*.txt')
+          if not files:
+              print("No files found")
+              exit()
+          latest = max(files)
+          server = os.environ.get('MIROFISH_URL')
+          with open(latest, 'rb') as f:
+              response = requests.post(
+                  f'{server}/api/upload',
+                  files={'file': f},
+                  timeout=30
+              )
+          print(f"Upload status: {response.status_code}")
+          EOF
+
+      - name: Upload artifact backup
         uses: actions/upload-artifact@v4
         with:
           name: nasdaq-news-${{ github.run_number }}
